@@ -148,14 +148,15 @@ exports.updateJob = async (req, res) => {
     try {
         const { email } = req.user;
         const manager = await User.findOne({ email });
-        //get the company in which this manager is assigned
+        console.log(manager.email);
+        // get the company in which this manager is assigned
         const company = await Company.findOne({
-            managerName: manager._id,
+            managerName: manager._id
         }).populate({
             path: "jobPosts",
         });
-
-        //get the id of the job from jobPosts array of that company that matches the req.params is
+        console.log(company);
+        // get the id of the job from jobPosts array of that company that matches the req.params is
         const job = company.jobPosts.find(
             (job) => job._id.toString() == req.params.id.toString()
         );

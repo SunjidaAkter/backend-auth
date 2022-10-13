@@ -109,16 +109,17 @@ exports.applyJobService = async (jobId, userId) => {
         job: jobId,
         applicant: userId,
     });
+    console.log(application)
     job.applications.push(application._id);
     await job.save({
         validateBeforeSave: false,
     });
     //push the application to the appliedJobs array of that user
-    const user = await User.findOne({ _id: userId });
-    user.appliedJobs.push(application._id);
-    await user.save({
-        validateBeforeSave: false,
-    });
+    // const user = await User.findOne({ _id: userId });
+    // user.appliedJobs.push(application._id);
+    // await user.save({
+    //     validateBeforeSave: false,
+    // });
     //return populated application
     const result = await Application.findOne({ _id: application._id })
         .populate({
