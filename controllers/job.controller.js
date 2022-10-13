@@ -65,24 +65,26 @@ exports.getJobsByManagerToken = async (req, res) => {
         const user = await User.findOne({ email }).select(
             "-password -__v -createdAt -updatedAt -role -status -appliedJobs"
         );
+        console.log(user._id);
         //get company by this user from Company model inside managerName field
-        const company = await Company.findOne({ managerName: email });
+        const company = await Company.findOne({ managerName: user._id });
 
         //get all jobs
         const jobs = await Job.find({}).select("-applications").populate({
             path: "companyInfo",
             select: "-jobPosts",
         });
+        console.log(jobs);
         //find the jobs by company id
-        const jobsByCompany = jobs.filter((job) => {
-            return job.companyInfo._id.toString() == company._id.toString();
+        const jobsByHM = jobs.filter((job) => {
+            return job.createdBy.id == user._id.toString();
         });
-
+        console.log(jobsByHM);
         res.status(200).json({
             status: "success",
             data: {
                 managerInfo: user,
-                jobs: jobsByCompany,
+                jobs: jobsByHM,
             },
         });
     } catch (error) {

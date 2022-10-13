@@ -1,10 +1,24 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 const valid = require("validator");
+const validator = require("validator");
+
 
 // schema design
 const jobSchema = mongoose.Schema(
     {
+        createdBy: {
+            email: {
+                type: String,
+                validate: [validator.isEmail, "Provide a valid Email"],
+                required: [true, "Please provide a Hiring Manager Email"],
+            },
+            id: {
+                type: ObjectId,
+                ref: "User",
+                required: [true, "Please provide a Hiring Manager id"],
+            }
+        },
         jobTitle: {
             type: String,
             required: [true, "Please provide a title for this job."],
