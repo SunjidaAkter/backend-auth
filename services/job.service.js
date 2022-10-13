@@ -22,13 +22,10 @@ exports.getJobsService = async (filters, queries) => {
 
 exports.getJobByIdService = async (id) => {
     const job = await Job.findOne({ _id: id })
-        // populate managerName without password
         .populate({
             path: "managerName",
             select: "-password -__v -createdAt -updatedAt -role -status",
         });
-    // .populate("suppliledBy.id")
-    // .populate("brand.id");
     return job;
 };
 
@@ -50,7 +47,6 @@ exports.createJobService = async (data) => {
     await company.save({
         validateBeforeSave: false,
     });
-    //push the jobPost in companyInfo's Job post array
 
     return result;
 };
@@ -114,13 +110,8 @@ exports.applyJobService = async (jobId, userId) => {
     await job.save({
         validateBeforeSave: false,
     });
-    //push the application to the appliedJobs array of that user
-    // const user = await User.findOne({ _id: userId });
-    // user.appliedJobs.push(application._id);
-    // await user.save({
-    //     validateBeforeSave: false,
-    // });
-    //return populated application
+
+
     const result = await Application.findOne({ _id: application._id })
         .populate({
             path: "job",

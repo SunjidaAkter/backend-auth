@@ -13,22 +13,11 @@ const { jobs } = require("googleapis/build/src/apis/jobs");
 
 exports.createJob = async (req, res, next) => {
     try {
-        //check user token to find manager's company id. if it doesnt match with req.body.companyInfo then return
         const { email } = req.user;
         const manager = await User.findOne({ email });
-        //get the company in which this manager is assigned
         const company = await Company.findOne({ managerName: manager._id });
 
-        // const { companyInfo } = req.body;
-        // if (company._id.toString() !== companyInfo.toString()) {
-        //     return res.status(400).json({
-        //         status: "fail",
-        //         message: "You are not authorized to create job for this company",
-        //     });
-        // }
 
-        // deadline must be atleast 1 day from now otherwise return
-        //deadline formate 2022-01-01
         const { deadline } = req.body;
         const today = new Date();
         const deadlineDate = new Date(deadline);
@@ -38,8 +27,6 @@ exports.createJob = async (req, res, next) => {
                 message: "Deadline must be atleast 1 day from now",
             });
         }
-
-        // save or create
 
         const result = await createJobService(req.body);
 
@@ -61,21 +48,16 @@ exports.getJobsByManagerToken = async (req, res) => {
     try {
         const { email } = req.user;
         console.log(email,);
-        //get user by this email from User model
         const user = await User.findOne({ email }).select(
             "-password -__v -createdAt -updatedAt -role -status -appliedJobs"
         );
         console.log(user._id);
-        //get company by this user from Company model inside managerName field
         const company = await Company.findOne({ managerName: user._id });
-
-        //get all jobs
         const jobs = await Job.find({}).select("-applications").populate({
             path: "companyInfo",
             select: "-jobPosts",
         });
         console.log(jobs);
-        //find the jobs by company id
         const jobsByHM = jobs.filter((job) => {
             return job.createdBy.id == user._id.toString();
         });
@@ -99,14 +81,10 @@ exports.getJobsByManagerToken = async (req, res) => {
 exports.getJobByManagerTokenJobId = async (req, res) => {
     try {
         const { email } = req.user;
-        //get user by this email from User model
         const user = await User.findOne({ email }).select(
             "-password -__v -createdAt -updatedAt -role -status -appliedJobs"
         );
-        //get company by this user from Company model inside managerName field
         const company = await Company.findOne({ managerName: user._id });
-
-        //get all jobs
         const jobs = await Job.find({})
             .populate({
                 path: "companyInfo",
@@ -121,7 +99,6 @@ exports.getJobByManagerTokenJobId = async (req, res) => {
                 },
                 select: "-job",
             });
-        //find the required job from jobs  with req.params id
         const { id } = req.params;
         const job = jobs.find((job) => {
             return job._id.toString() == id.toString();
@@ -144,19 +121,16 @@ exports.getJobByManagerTokenJobId = async (req, res) => {
 };
 
 exports.updateJob = async (req, res) => {
-    //check user token to find manager's company id. if it doesnt match with req.body.companyInfo then return
     try {
         const { email } = req.user;
         const manager = await User.findOne({ email });
         console.log(manager.email);
-        // get the company in which this manager is assigned
         const company = await Company.findOne({
             managerName: manager._id
         }).populate({
             path: "jobPosts",
         });
         console.log(company);
-        // get the id of the job from jobPosts array of that company that matches the req.params is
         const job = company.jobPosts.find(
             (job) => job._id.toString() == req.params.id.toString()
         );
@@ -168,7 +142,6 @@ exports.updateJob = async (req, res) => {
             });
         }
 
-        // if job id doesnt match the id of req.params then return
         if (job._id != req.params.id) {
             return res.status(400).json({
                 status: "fail",
@@ -194,16 +167,13 @@ exports.updateJob = async (req, res) => {
 
 exports.getAllJobs = async (req, res) => {
     try {
-        //{price:{$ gt:50}
-        //{ price: { gt: '50' } }
+
 
         let filters = { ...req.query };
 
-        //sort , page , limit -> exclude
         const excludeFields = ["sort", "page", "limit"];
         excludeFields.forEach((field) => delete filters[field]);
 
-        //gt ,lt ,gte .lte
         let filtersString = JSON.stringify(filters);
         filtersString = filtersString.replace(
             /\b(gt|gte|lt|lte|ne|eq)\b/g,
@@ -215,7 +185,6 @@ exports.getAllJobs = async (req, res) => {
         const queries = {};
 
         if (req.query.sort) {
-            // price,qunatity   -> 'price quantity'
             const sortBy = req.query.sort.split(",").join(" ");
             queries.sortBy = sortBy;
         }
@@ -226,8 +195,7 @@ exports.getAllJobs = async (req, res) => {
         }
 
         if (req.query.page) {
-            const { page = 1, limit = 10 } = req.query; // "3" "10"
-
+            const { page = 1, limit = 10 } = req.query;
             const skip = (page - 1) * parseInt(limit);
             queries.skip = skip;
             queries.limit = parseInt(limit);
@@ -284,7 +252,6 @@ exports.applyJob = async (req, res) => {
             });
         }
 
-        //check if application date is less or equal to deadline date
         const today = new Date();
         const deadline = new Date(job.deadline);
         if (today > deadline) {
@@ -294,8 +261,6 @@ exports.applyJob = async (req, res) => {
             });
         }
 
-        //check if user has already applied for this job
-        // get all the applications that have been applied for this job and find if the user has already applied
         const applications = await Application.find({ job: job._id });
         const isApplied = applications.find(
             (application) =>
