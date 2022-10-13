@@ -2,13 +2,16 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
-// const toursRoute = require("./routes/v1/tours.route")
-// const tourRoute = require("./routes/v1/tour.route")
 
 
 // middlewares
 app.use(express.json());
 app.use(cors());
+
+
+//routes
+const userRoute = require("./routes/v1/user.route");
+const jobRoute = require("./routes/v1/job.route");
 
 
 //checking routes
@@ -17,5 +20,7 @@ app.get("/", (req, res) => {
 })
 
 
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1", jobRoute);
 
 module.exports = app;
